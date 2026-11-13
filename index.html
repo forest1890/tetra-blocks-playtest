@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>TETRA BLOCKS - 試遊ページ</title>
+<style>
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+         background:#0b0c14; color:#eef; font-family:system-ui, sans-serif; }
+  .card { background:#151824; border:1px solid #343a52; border-radius:12px; padding:32px 28px;
+          width:min(92vw, 360px); text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.5); }
+  h1 { font-size:22px; margin:0 0 6px; letter-spacing:.08em; }
+  .blocks { font-size:20px; margin-bottom:10px; }
+  p { color:#aab; font-size:14px; line-height:1.6; }
+  input { width:100%; box-sizing:border-box; padding:11px; font-size:16px; border-radius:8px;
+          border:1px solid #454c6e; background:#0e1018; color:#fff; margin:10px 0; }
+  button { width:100%; padding:11px; font-size:16px; border:0; border-radius:8px; cursor:pointer;
+           background:#00a8c0; color:#fff; font-weight:bold; }
+  button:hover { background:#00c0da; }
+  .err { color:#ff8080; font-size:13px; min-height:18px; margin-top:8px; }
+</style>
+</head>
+<body>
+  <form class="card" id="gate">
+    <div class="blocks">🟦🟨🟪🟥</div>
+    <h1>TETRA BLOCKS</h1>
+    <p>これは限定公開の試遊ページです。<br>パスワードを入力してください。</p>
+    <input type="password" id="pw" autocomplete="current-password" placeholder="パスワード" autofocus>
+    <button type="submit">ゲームをはじめる</button>
+    <div class="err" id="err"></div>
+  </form>
+<script>
+  // 簡易ゲート: 入力の SHA-256 がこのハッシュと一致したら入室。
+  // 静的ホスティング上の簡易制限であり、解析には耐えない前提の「知っている人向け」公開用。
+  const EXPECTED = "18e2ed22b24241f47c35213f1cb4351dfcaac8ccb6e15d9d5990a62a7f0635d4";
+  const TOKEN = EXPECTED.slice(0, 16);
+  if (sessionStorage.getItem("tetra_gate") === TOKEN) {
+    location.replace("game/index.html");
+  }
+  document.getElementById("gate").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById("pw").value;
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
+    const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+    if (hex === EXPECTED) {
+      sessionStorage.setItem("tetra_gate", TOKEN);
+      location.replace("game/index.html");
+    } else {
+      document.getElementById("err").textContent = "パスワードが違います。";
+    }
+  });
+</script>
+</body>
+</html>
